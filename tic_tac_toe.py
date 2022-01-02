@@ -17,13 +17,11 @@ class TicTacToe:
     def check_winner(self, player_val):
         for row in self.gameboard:
             if all([player_val == row[i].value for i in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in row
-                print("Player won by rows")
                 return True
 
         for i in range(TicTacToe.GRID_SIZE):
             col = [self.gameboard[j][i] for j in range(TicTacToe.GRID_SIZE)] #extract column
-            if all([player_val == col[k].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col
-                print("Player won by cols")
+            if all([player_val == col[k].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col                
                 return True
 
         check_diagonal = True

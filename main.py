@@ -52,26 +52,29 @@ while running:
 
     pos = pg.mouse.get_pos()
     if pg.mouse.get_pressed() == (1,0,0):
-        curr_tile = tic_tac_toe.player_place_val(pos)
-        if curr_tile is not None:
+        player_tile = tic_tac_toe.player_place_val(pos)
+        if player_tile is not None:
             pg.display.set_caption("Tic-Tac-Toe")
-            draw_value_on_tile(curr_tile)
+            draw_value_on_tile(player_tile)
         else:
             print("Tile was already pressed!")
             pg.display.set_caption("Can't place value there because this tile has already been pressed")
 
 
-        if tic_tac_toe.check_winner(PLAYER_VAL):
-            pg.display.set_caption("You tied!")
+        if tic_tac_toe.check_winner(PLAYER_VAL) and not found_winner:
+            pg.display.set_caption("You won!")
+            found_winner = True
 
         computer_tile = tic_tac_toe.computer_place_val()
-        if computer_tile is not None:
+        if computer_tile is None: #couldn't place a value which means the board is full
+            pg.display.set_caption("You tied!")
+            found_winner = True
+        elif not found_winner: #only draw on the new tile if there is no winner yet
             draw_value_on_tile(computer_tile)
-        else:
-            pg.display.set_caption("You won!")
 
-        if tic_tac_toe.check_winner(COMPUTER_VAL):
+        if tic_tac_toe.check_winner(COMPUTER_VAL) and not found_winner:
             pg.display.set_caption("You lost!")
+            found_winner = True
 
         pg.time.delay(100)
 
