@@ -1,32 +1,46 @@
 # Import and initialize the pg library
 import pygame as pg
-from game_funcs import *
-from random import randrange
-from random import seed
+from tic_tac_toe import TicTacToe
+from tile import Tile
 
-PLAYER = 0
-COMPUTER = 1
+BLUE = (0,0,255)
+GRAY = (192,192,192)
+WHITE = (255,255,255)
+PLAYER_VAL = 'O'
+COMPUTER_VAL = 'X'
 
 pg.init()
 
 # Set up the drawing window
-screen = pg.display.set_mode([500, 500])
+screen = pg.display.set_mode([600, 600])
 
 # Fill the background with white
-screen.fill((255, 255, 255))
+screen.fill(WHITE)
 
 pg.display.set_caption("Tic-Tac-Toe")
 
-#set gameboard with diffult values
-gameboard = [['a','b','c'], ['d','e','f'], ['g','h','i']]
+tic_tac_toe = TicTacToe()
+
+def draw_value_on_tile(tile):
+    if tile.value == 'X':
+        pg.draw.line(screen, BLUE, tile.pos, (tile.pos[0] + Tile.TILE_WIDTH, tile.pos[1] + Tile.TILE_HEIGHT))
+        pg.draw.line(screen, BLUE, (tile.pos[0] + Tile.TILE_WIDTH, tile.pos[1]), (tile.pos[0], tile.pos[1] + Tile.TILE_HEIGHT))
+        pg.display.update()
+    else:
+        pg.draw.circle(screen, BLUE, (tile.pos[0] + Tile.TILE_WIDTH // 2, tile.pos[1] + Tile.TILE_HEIGHT // 2), Tile.TILE_WIDTH // 2, 1)
+        pg.display.update()
+    pg.time.delay(300)
+
 
 #draw grid
-pg.draw.line(screen, (0, 0, 255), (50,300), (450,300))
-pg.draw.line(screen, (0, 0, 255), (50,150), (450,150))
-pg.draw.line(screen, (0, 0, 255), (175,50), (175,450))
-pg.draw.line(screen, (0, 0, 255), (325,50), (325,450))
+for i in range(TicTacToe.GRID_SIZE):
+    for j in range(TicTacToe.GRID_SIZE):
+        current_tile = tic_tac_toe.gameboard[i][j]
+        pg.draw.rect(screen, GRAY, (current_tile.pos[0], current_tile.pos[1], Tile.TILE_WIDTH, Tile.TILE_HEIGHT))
+        pg.draw.rect(screen, BLUE, (current_tile.pos[0], current_tile.pos[1], Tile.TILE_WIDTH, Tile.TILE_HEIGHT), 1)
 
 # Run until the user asks to quit
+found_winner = False
 running = True
 while running:
     pg.mouse.set_cursor(pg.cursors.diamond)
@@ -36,49 +50,30 @@ while running:
         if event.type == pg.QUIT:
             running = False
 
-    #player places a cirlcle
     pos = pg.mouse.get_pos()
     if pg.mouse.get_pressed() == (1,0,0):
-        pg.draw.circle(screen, (0, 0, 255), pos, 25)
-        update_gameboard(gameboard, pos, PLAYER)
-        pg.time.delay(50)
-
-        #computer places a square
-        counter = 0
-        rand_row = randrange(3)
-        rand_col = randrange(3)
-        while not check_coord(gameboard, (rand_row, rand_col)) and counter <= 9:
-            rand_row = randrange(3)
-            rand_col = randrange(3)
-            counter += 1
-        print("Computer coord", rand_row, rand_col)
-
-        gameboard[rand_row][rand_col] = COMPUTER
-        draw_at_grid_cord(screen, (rand_row, rand_col))
-
-        player_win = check_winner(gameboard, PLAYER)
-        computer_win = check_winner(gameboard, COMPUTER)
-
-        winner = None
-        if player_win:
-            winner = PLAYER
-        elif computer_win:
-            winner = COMPUTER
-
-        if winner is not None:
-            print(f"The winner is {winner}")
-            screen.fill((255, 255, 255))
-            pg.time.delay(75)
-            text_surface = pg.font.Font.render(pg.font.SysFont("arial", 30), f"The winner is {winner}", True, (0,0,255))
-            pg.Surface.blit(screen, text_surface, (100,100))
-
-        pg.time.delay(75)
+        curr_tile = tic_tac_toe.player_place_val(pos)
+        if curr_tile is not None:
+            pg.display.set_caption("Tic-Tac-Toe")
+            draw_value_on_tile(curr_tile)
+        else:
+            print("Tile was already pressed!")
+            pg.display.set_caption("Can't place value there because this tile has already been pressed")
 
 
-    print(gameboard)
-    if check_for_filled_board(gameboard):
-        pg.quit()
+        if tic_tac_toe.check_winner(PLAYER_VAL):
+            pg.display.set_caption("You tied!")
 
+        computer_tile = tic_tac_toe.computer_place_val()
+        if computer_tile is not None:
+            draw_value_on_tile(computer_tile)
+        else:
+            pg.display.set_caption("You won!")
+
+        if tic_tac_toe.check_winner(COMPUTER_VAL):
+            pg.display.set_caption("You lost!")
+
+        pg.time.delay(100)
 
     # Flip the display
     pg.display.flip()
