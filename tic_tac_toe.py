@@ -15,20 +15,20 @@ class TicTacToe:
         return game_str
 
     def check_winner(self, player_val):
-        for row in self.gameboard:
-            if all([player_val == row[i].value for i in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in row
-                return True
-
+        check_diagonal_right = True
+        check_diagonal_left = True
         for i in range(TicTacToe.GRID_SIZE):
-            col = [self.gameboard[j][i] for j in range(TicTacToe.GRID_SIZE)] #extract column
-            if all([player_val == col[k].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col                
+            if all([player_val == self.gameboard[i][j].value for j in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in row
                 return True
-
-        check_diagonal = True
-        for i in range(TicTacToe.GRID_SIZE):
+            if all([player_val == self.gameboard[k][i].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col
+                return True
             if self.gameboard[i][i].value != player_val:
-                check_diagonal = False
-        return check_diagonal
+                check_diagonal_right = False
+            if self.gameboard[i][TicTacToe.GRID_SIZE - (i + 1)].value != player_val:
+                check_diagonal_left = False
+
+        return check_diagonal_left or check_diagonal_right
+
 
     def check_for_filled_board(self):
         filled = True
