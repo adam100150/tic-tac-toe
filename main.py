@@ -55,26 +55,28 @@ while running:
         player_tile = tic_tac_toe.player_place_val(pos)
         if player_tile is not None:
             pg.display.set_caption("Tic-Tac-Toe")
+            placed_in_filled_spot = False
             draw_value_on_tile(player_tile)
         else:
             print("Tile was already pressed!")
             pg.display.set_caption("Can't place value there because this tile has already been pressed")
+            placed_in_filled_spot = True
 
+        if not found_winner and not placed_in_filled_spot:
+            if tic_tac_toe.check_winner(tic_tac_toe.gameboard, PLAYER_VAL):
+                pg.display.set_caption("You won!")
+                found_winner = True
 
-        if tic_tac_toe.check_winner(PLAYER_VAL) and not found_winner:
-            pg.display.set_caption("You won!")
-            found_winner = True
+            computer_tile = tic_tac_toe.ai_place_val()
+            if computer_tile is None: #couldn't place a value which means the board is full
+                pg.display.set_caption("You tied!")
+                found_winner = True
+            else:
+                draw_value_on_tile(computer_tile)
 
-        computer_tile = tic_tac_toe.computer_place_val()
-        if computer_tile is None: #couldn't place a value which means the board is full
-            pg.display.set_caption("You tied!")
-            found_winner = True
-        elif not found_winner: #only draw on the new tile if there is no winner yet
-            draw_value_on_tile(computer_tile)
-
-        if tic_tac_toe.check_winner(COMPUTER_VAL) and not found_winner:
-            pg.display.set_caption("You lost!")
-            found_winner = True
+            if tic_tac_toe.check_winner(tic_tac_toe.gameboard, COMPUTER_VAL):
+                pg.display.set_caption("You lost!")
+                found_winner = True
 
         pg.time.delay(100)
 

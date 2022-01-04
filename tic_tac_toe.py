@@ -1,4 +1,5 @@
 from tile import Tile
+import copy
 
 class TicTacToe:
     GRID_SIZE = 3
@@ -14,27 +15,27 @@ class TicTacToe:
                 game_str += "\n"
         return game_str
 
-    def check_winner(self, player_val):
+    def check_winner(self, board, player_val):
         check_diagonal_right = True
         check_diagonal_left = True
         for i in range(TicTacToe.GRID_SIZE):
-            if all([player_val == self.gameboard[i][j].value for j in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in row
+            if all([player_val == board[i][j].value for j in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in row
                 return True
-            if all([player_val == self.gameboard[k][i].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col
+            if all([player_val == board[k][i].value for k in range(TicTacToe.GRID_SIZE)]): #check for if player has equal value in all entries in col
                 return True
-            if self.gameboard[i][i].value != player_val:
+            if board[i][i].value != player_val:
                 check_diagonal_right = False
-            if self.gameboard[i][TicTacToe.GRID_SIZE - (i + 1)].value != player_val:
+            if board[i][TicTacToe.GRID_SIZE - (i + 1)].value != player_val:
                 check_diagonal_left = False
 
         return check_diagonal_left or check_diagonal_right
 
 
-    def check_for_filled_board(self):
+    def check_for_filled_board(self, board):
         filled = True
         for i in range(TicTacToe.GRID_SIZE):
             for j in range(TicTacToe.GRID_SIZE):
-                if isinstance(gameboard[i][j],str):
+                if board[i][j].value == 'A':
                     filled = False
         return filled
 
@@ -52,10 +53,10 @@ class TicTacToe:
                         current_tile.pressed = True
                         return current_tile
 
-    def computer_place_val(self):
+    def place_val_in_next_avail_spot(self, gameboard_par):
         found_coord = False
         for coord in self.dist:
-            if not self.gameboard[coord[0]][coord[1]].pressed:
+            if not gameboard_par[coord[0]][coord[1]].pressed:
                 row = coord[0]
                 col = coord[1]
                 found_coord = True
@@ -64,14 +65,68 @@ class TicTacToe:
         if not found_coord:
             return None
         else:
-            self.gameboard[row][col].value = 'X'
-            return self.gameboard[row][col]
+            gameboard_par[row][col].value = 'X'
+            return gameboard_par[row][col]
 
     def row_and_col_vals(self):
         for i in range(TicTacToe.GRID_SIZE):
             for j in range(TicTacToe.GRID_SIZE):
-                yield (i,j)
+                yield (i, j)
 
-    def print_list_tile(self, lst):
-        for i in lst:
-            print(i)
+    def game_over(self, board):
+        return self.check_winner(board, 'X') or self.check_winner(board, 'O') or self.check_for_filled_board(board)
+
+    def ai_place_val(self):
+        max_score = float('-inf')
+        best_move = (-1,-1)
+        for i in range(TicTacToe.GRID_SIZE):
+            for j in range(TicTacToe.GRID_SIZE):
+                if not self.gameboard[i][j].pressed:
+                    self.gameboard[i][j].value = 'X'
+                    self.gameboard[i][j].pressed = True
+                    curr_score = self.minimax(copy.deepcopy(self.gameboard), depth=0, is_maximized=False)
+                    if curr_score > max_score:
+                        max_score = curr_score
+                        best_move = (i, j)
+                    self.gameboard[i][j].value = 'A'
+                    self.gameboard[i][j].pressed = False
+        if best_move != (-1,-1):
+            self.gameboard[best_move[0]][best_move[1]].value = 'X'
+            self.gameboard[best_move[0]][best_move[1]].pressed = True
+            return self.gameboard[best_move[0]][best_move[1]]
+        else:
+            return None
+
+
+    def minimax(self, board, depth, is_maximized):
+        if self.game_over(board):
+            if self.check_winner(board, 'X'):
+                return 1
+            elif self.check_winner(board, 'O'):
+                return -1
+            else:
+                return 0
+        elif is_maximized:
+            best_val = float('-inf')
+            for i in range(TicTacToe.GRID_SIZE):
+                for j in range(TicTacToe.GRID_SIZE):
+                    if not board[i][j].pressed:
+                        board[i][j].value = 'X'
+                        board[i][j].pressed = True
+                        score = self.minimax(copy.deepcopy(board), depth + 1, False)
+                        best_val = max(score, best_val)
+                        board[i][j].value = 'A'
+                        board[i][j].pressed = False
+            return best_val
+        else:
+            best_val = float('inf')
+            for i in range(TicTacToe.GRID_SIZE):
+                for j in range(TicTacToe.GRID_SIZE):
+                    if not board[i][j].pressed:
+                        board[i][j].value = 'O'
+                        board[i][j].pressed = True
+                        score = self.minimax(copy.deepcopy(board), depth + 1, True)
+                        best_val = min(score, best_val)
+                        board[i][j].value = 'A'
+                        board[i][j].pressed = False
+            return best_val
