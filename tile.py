@@ -6,5 +6,13 @@ class Tile:
         self.pressed = False
         self.value = 'A'
 
+    def press(self, value):
+        self.value = value
+        self.pressed = True
+
+    def unpress(self):
+        self.value = 'A'
+        self.pressed = False
+
     def __str__(self):
         return f"Top left corner of tile: {self.pos}, Pressed is {self.pressed} and Value is {self.value}"

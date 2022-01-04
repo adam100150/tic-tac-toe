@@ -5,7 +5,6 @@ class TicTacToe:
     GRID_SIZE = 3
     def __init__(self):
         self.gameboard = [[Tile((0,0)), Tile((200, 0)), Tile((400, 0))],[Tile((0, 200)), Tile((200, 200)), Tile((400, 200))],[Tile((0, 400)), Tile((200, 400)), Tile((400,400))]]
-        self.dist = self.row_and_col_vals()
 
     def __str__(self):
         game_str = ""
@@ -53,25 +52,12 @@ class TicTacToe:
                         current_tile.pressed = True
                         return current_tile
 
-    def place_val_in_next_avail_spot(self, gameboard_par):
-        found_coord = False
-        for coord in self.dist:
-            if not gameboard_par[coord[0]][coord[1]].pressed:
-                row = coord[0]
-                col = coord[1]
-                found_coord = True
-                break
-
-        if not found_coord:
-            return None
-        else:
-            gameboard_par[row][col].value = 'X'
-            return gameboard_par[row][col]
-
-    def row_and_col_vals(self):
+    def yield_next_avail_spot(self, board):
         for i in range(TicTacToe.GRID_SIZE):
             for j in range(TicTacToe.GRID_SIZE):
-                yield (i, j)
+                if not board[i][j].pressed:
+                    yield (i, j)
+
 
     def game_over(self, board):
         return self.check_winner(board, 'X') or self.check_winner(board, 'O') or self.check_for_filled_board(board)
@@ -79,26 +65,25 @@ class TicTacToe:
     def ai_place_val(self):
         max_score = float('-inf')
         best_move = (-1,-1)
-        for i in range(TicTacToe.GRID_SIZE):
-            for j in range(TicTacToe.GRID_SIZE):
-                if not self.gameboard[i][j].pressed:
-                    self.gameboard[i][j].value = 'X'
-                    self.gameboard[i][j].pressed = True
-                    curr_score = self.minimax(copy.deepcopy(self.gameboard), depth=0, is_maximized=False)
-                    if curr_score > max_score:
-                        max_score = curr_score
-                        best_move = (i, j)
-                    self.gameboard[i][j].value = 'A'
-                    self.gameboard[i][j].pressed = False
+        avail_tile = self.yield_next_avail_spot(self.gameboard)
+
+        for coord in avail_tile:
+            self.gameboard[coord[0]][coord[1]].press('X')
+            curr_score = self.minimax(copy.deepcopy(self.gameboard), depth=0, is_maximized=False)
+            if curr_score > max_score:
+                max_score = curr_score
+                best_move = (coord[0], coord[1])
+            self.gameboard[coord[0]][coord[1]].unpress()
+
         if best_move != (-1,-1):
-            self.gameboard[best_move[0]][best_move[1]].value = 'X'
-            self.gameboard[best_move[0]][best_move[1]].pressed = True
+            self.gameboard[best_move[0]][best_move[1]].press('X')
             return self.gameboard[best_move[0]][best_move[1]]
         else:
             return None
 
 
     def minimax(self, board, depth, is_maximized):
+        avail_tile = self.yield_next_avail_spot(board)
         if self.game_over(board):
             if self.check_winner(board, 'X'):
                 return 1
@@ -106,27 +91,21 @@ class TicTacToe:
                 return -1
             else:
                 return 0
+
         elif is_maximized:
             best_val = float('-inf')
-            for i in range(TicTacToe.GRID_SIZE):
-                for j in range(TicTacToe.GRID_SIZE):
-                    if not board[i][j].pressed:
-                        board[i][j].value = 'X'
-                        board[i][j].pressed = True
-                        score = self.minimax(copy.deepcopy(board), depth + 1, False)
-                        best_val = max(score, best_val)
-                        board[i][j].value = 'A'
-                        board[i][j].pressed = False
+            for coord in avail_tile:
+                board[coord[0]][coord[1]].press('X')
+                score = self.minimax(board, depth + 1, False)
+                best_val = max(score, best_val)
+                board[coord[0]][coord[1]].unpress()
             return best_val
+
         else:
             best_val = float('inf')
-            for i in range(TicTacToe.GRID_SIZE):
-                for j in range(TicTacToe.GRID_SIZE):
-                    if not board[i][j].pressed:
-                        board[i][j].value = 'O'
-                        board[i][j].pressed = True
-                        score = self.minimax(copy.deepcopy(board), depth + 1, True)
-                        best_val = min(score, best_val)
-                        board[i][j].value = 'A'
-                        board[i][j].pressed = False
+            for coord in avail_tile:
+                board[coord[0]][coord[1]].press('O')
+                score = self.minimax(board, depth + 1, True)
+                best_val = min(score, best_val)
+                board[coord[0]][coord[1]].unpress()
             return best_val
